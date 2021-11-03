@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <title>Animation</title>
+
+    <style>
+        body {
+            background: black;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            /* animation: 1.6s linear 0s infinite rotation; */
+        }
+
+        .node-wrapper {
+            position: absolute;
+            transform: translate(50%, -50%);
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+        }
+
+        .node {
+            position: absolute;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            border: 0.1px solid rgb(255, 255, 255, 0.5);
+            animation: 0.8s ease-in-out 0s infinite alternate periodic-scaling;
+        }
+
+        .controls {
+            position: absolute;
+            z-index: 1;
+            top: 50px;
+            left: 30px;
+            background: darkslategray;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            width: 250px;
+            padding: 10px 20px;
+        }
+
+        .controls label {
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .controls label input {
+            height: 30px;
+            outline: none;
+            padding: 0px 10px;
+        }
+
+        @keyframes periodic-scaling {
+            from {
+                transform: scaleY(1);
+            }
+
+            to {
+                transform: scaleY(2);
+            }
+        }
+
+        @keyframes rotation {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <label>Кол-во осей: <input type="number" id="axes" value="10"/></label>
+        <label>Кол-во окружностей: <input type="number" id="copies" value="10"/></label>
+        <label>Расстояние от центра: <input type="number" id="diffFromCenter" value="50"/></label>
+    </div>
+
+    <div class="container"></div>
+    <script>
+        const createEllipse = ({
+            rotate = '0',
+            id,
+            root,
+            copies = 1,
+            diffFromCenter = 100
+        }) => {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('node-wrapper');
+            wrapper.style.transform = `rotate(${rotate}deg)`;
+            wrapper.setAttribute('data-id', id);
+
+            for (let i = 0; i < copies; i++) {
+                const el = document.createElement('div');
+                el.classList.add('node');
+                el.style.top = `${diffFromCenter + i * 8}px`;
+                wrapper.appendChild(el);
+            }
+
+            root.appendChild(wrapper);
+        };
+
+        const createAnimation = ({ axes = 10, root = document.body, copies, diffFromCenter, rotation }) => {
+            for (let id = 1; id <= axes; id++) {
+                createEllipse({
+                    id,
+                    root,
+                    rotate: id / axes * 360,
+                    copies,
+                    diffFromCenter
+                })
+            }
+        }
+
+        const root = document.querySelector('.container');
+        createAnimation({
+            axes: 10,
+            copies: 10,
+            root,
+            diffFromCenter: 50
+        });
+
+        const reset = () => {
+            root.innerHTML = '';
+        };
+
+        const axes = document.querySelector('#axes');
+        const copies = document.querySelector('#copies');
+        const diffFromCenter = document.querySelector('#diffFromCenter');
+
+        const listener = ({ target: { value, id } }) => {
+            reset();
+            createAnimation({
+                root,
+
+                axes: +axes.value,
+                copies: +copies.value,
+                diffFromCenter: +diffFromCenter.value,
+                [id]: +value
+            });
+        }
+
+        axes.addEventListener('change', listener);
+        copies.addEventListener('change', listener);
+        diffFromCenter.addEventListener('change', listener);
+    </script>
+</body>
+
+</html>
