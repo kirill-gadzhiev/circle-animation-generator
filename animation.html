@@ -5,6 +5,11 @@
     <title>Animation</title>
 
     <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
         body {
             background: black;
         }
@@ -13,12 +18,22 @@
             position: relative;
             width: 100vw;
             height: 100vh;
-            /* animation: 1.6s linear 0s infinite rotation; */
+            box-sizing: border-box;
+        }
+
+        .animation-wrapper {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            animation: var(--rotation-period, 5s) linear 0s infinite rotation;
         }
 
         .node-wrapper {
             position: absolute;
-            transform: translate(50%, -50%);
+            transform: translate(-50%, -50%) rotate(var(--rotation, 5s));
             top: 50%;
             left: 50%;
             width: 100px;
@@ -26,12 +41,20 @@
         }
 
         .node {
+            opacity: 0.5;
             position: absolute;
             border-radius: 50%;
             width: 100px;
             height: 100px;
-            border: 0.1px solid rgb(255, 255, 255, 0.5);
-            animation: 0.8s ease-in-out 0s infinite alternate periodic-scaling;
+            border: 0.1px solid var(--border-color, #fff);
+            animation: var(--scale-period, 0.8s) ease-in-out 0s infinite alternate periodic-scaling;
+        }
+
+        .node__box {
+            position: absolute;
+            border: 1px solid red;
+            width: 100%;
+            height: 100%;
         }
 
         .controls {
@@ -59,6 +82,7 @@
             height: 30px;
             outline: none;
             padding: 0px 10px;
+            border-radius: 6px;
         }
 
         @keyframes periodic-scaling {
@@ -67,7 +91,7 @@
             }
 
             to {
-                transform: scaleY(2);
+                transform: scaleY(var(--scale, 2));
             }
         }
 
@@ -85,45 +109,70 @@
 
 <body>
     <div class="controls">
-        <label>Кол-во осей: <input type="number" id="axes" value="10"/></label>
-        <label>Кол-во окружностей: <input type="number" id="copies" value="10"/></label>
-        <label>Расстояние от центра: <input type="number" id="diffFromCenter" value="50"/></label>
+        <label>Кол-во осей: <input type="number" id="axes" value="10" /></label>
+        <label>Кол-во окружностей: <input type="number" id="copies" value="10" /></label>
+        <label>Расстояние от центра: <input type="number" id="diffFromCenter" value="50" /></label>
+        <label>Период вращения: <input type="number" id="rotation" value="5" step="0.1" /></label>
+        <label>Коэффициент увеличения: <input type="number" id="scale" value="2" step="0.1" /></label>
+        <label>Период увеличения: <input type="number" id="scalePeriod" value="0.8" step="0.05" /></label>
+        <label>Цвет анимации: <input type="color" id="borderColor" value="#ffffff"/></label>
+        <label>Цвет фона: <input type="color" id="backgroundColor" value="#000000"/></label>
+        <label>Показать границы: <input type="checkbox" id="showBox" /></label>
     </div>
 
     <div class="container"></div>
     <script>
+        // Создание анимации
         const createEllipse = ({
             rotate = '0',
             id,
             root,
             copies = 1,
-            diffFromCenter = 100
+            diffFromCenter = 100,
+            showBox
         }) => {
             const wrapper = document.createElement('div');
             wrapper.classList.add('node-wrapper');
-            wrapper.style.transform = `rotate(${rotate}deg)`;
+            wrapper.style.setProperty('--rotation', `${rotate}deg`);
             wrapper.setAttribute('data-id', id);
 
             for (let i = 0; i < copies; i++) {
                 const el = document.createElement('div');
                 el.classList.add('node');
                 el.style.top = `${diffFromCenter + i * 8}px`;
+
+                if (!i && showBox) {
+                    const box = document.createElement('node__box');
+                    box.classList.add('node__box');
+                    el.appendChild(box);
+                }
+
                 wrapper.appendChild(el);
             }
 
             root.appendChild(wrapper);
         };
 
-        const createAnimation = ({ axes = 10, root = document.body, copies, diffFromCenter, rotation }) => {
+        const createAnimation = ({ axes = 10, root = document.body, copies, diffFromCenter, rotation = 5, showBox, scale = 2, scalePeriod = 0.8, borderColor = '#fff'}) => {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('animation-wrapper');
+            wrapper.style.setProperty('--rotation-period', `${rotation}s`)
+            wrapper.style.setProperty('--scale', scale);
+            wrapper.style.setProperty('--scale-period', `${scalePeriod}s`);
+            wrapper.style.setProperty('--border-color', borderColor);
+
             for (let id = 1; id <= axes; id++) {
                 createEllipse({
                     id,
-                    root,
+                    root: wrapper,
                     rotate: id / axes * 360,
                     copies,
-                    diffFromCenter
+                    diffFromCenter,
+                    showBox,
                 })
             }
+
+            root.appendChild(wrapper);
         }
 
         const root = document.querySelector('.container');
@@ -131,9 +180,11 @@
             axes: 10,
             copies: 10,
             root,
-            diffFromCenter: 50
+            diffFromCenter: 50,
         });
 
+
+        // Панель управления
         const reset = () => {
             root.innerHTML = '';
         };
@@ -141,8 +192,14 @@
         const axes = document.querySelector('#axes');
         const copies = document.querySelector('#copies');
         const diffFromCenter = document.querySelector('#diffFromCenter');
+        const showBox = document.querySelector('#showBox');
+        const rotation = document.querySelector('#rotation');
+        const scale = document.querySelector('#scale');
+        const scalePeriod = document.querySelector('#scalePeriod');
+        const borderColor = document.querySelector('#borderColor');
+        const backgroundColor = document.querySelector('#backgroundColor');
 
-        const listener = ({ target: { value, id } }) => {
+        const listener = () => {
             reset();
             createAnimation({
                 root,
@@ -150,13 +207,19 @@
                 axes: +axes.value,
                 copies: +copies.value,
                 diffFromCenter: +diffFromCenter.value,
-                [id]: +value
+                showBox: showBox.checked,
+                rotation: +rotation.value,
+                scale: +scale.value,
+                scalePeriod: +scalePeriod.value,
+                borderColor: borderColor.value
             });
         }
 
-        axes.addEventListener('change', listener);
-        copies.addEventListener('change', listener);
-        diffFromCenter.addEventListener('change', listener);
+        [axes, copies, diffFromCenter, showBox, rotation, scale, scalePeriod, borderColor].forEach(control => control.addEventListener('change', listener));
+
+        backgroundColor.addEventListener('change', () => {
+            document.body.style.backgroundColor = backgroundColor.value;
+        });
     </script>
 </body>
 
