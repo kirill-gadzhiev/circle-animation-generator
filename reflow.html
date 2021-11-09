@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Reflow</title>
+    <style>
+        .loader {
+            width: 30px;
+            height: 30px;
+            border: 3px solid greenyellow;
+            border-bottom: none;
+            animation: 1.5s linear 0s infinite loader-anim;
+            margin-bottom: 15px;
+        }
+
+        
+
+        @keyframes loader-anim {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <button>Бесполезная кнопка</button>
+    <button id="stop">Stop the world</button>
+
+    <script>
+        const stopBtn = document.querySelector('#stop');
+        stopBtn.addEventListener('click', () => {
+            let t = 0;
+            while(true) {
+                if (t < 1000) {
+                    t++;
+                } else {
+                    t = 0;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
