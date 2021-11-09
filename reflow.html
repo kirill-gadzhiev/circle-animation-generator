@@ -23,10 +23,37 @@
                 transform: rotate(360deg);
             }
         }
+
+        .width-anim {
+            border: 1px solid black;
+            width: 200px;
+            height: 20px;
+            position: relative;
+        }
+
+        .progress {
+            background: green;
+            height: 100%;
+            animation: 1.5s linear 0s infinite width-anim;
+        }
+
+        @keyframes width-anim {
+            from {
+                width: 10px;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="loader"></div>
+    <div class="width-anim">
+        <div class="progress"></div>
+    </div>
     <button>Бесполезная кнопка</button>
     <button id="stop">Stop the world</button>
 
